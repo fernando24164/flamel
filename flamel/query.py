@@ -1,6 +1,9 @@
+from typing import Any, Iterable, List, Optional, Tuple, Union
+
+
 class SQLQueryBuilder:
     @staticmethod
-    def select(model, columns=None):
+    def select(model: Any, columns: Optional[List[str]] = None) -> str:
         if columns is None or not columns:
             columns = ["*"]
 
@@ -10,7 +13,7 @@ class SQLQueryBuilder:
         return query
 
     @staticmethod
-    def filter(**filters):
+    def filter(**filters: Union[str, Any]) -> Tuple[str, Tuple]:
         if not filters:
             return "", ()
 
@@ -19,16 +22,16 @@ class SQLQueryBuilder:
         return filter_str, values
 
     @staticmethod
-    def join(join_type, table_name, on_condition):
+    def join(join_type: str, table_name: str, on_condition: str) -> str:
         return f" {join_type} JOIN {table_name} ON {on_condition}"
 
     @staticmethod
-    def order_by(*columns, direction="ASC"):
+    def order_by(*columns: Iterable[str], direction: str = "ASC") -> str:
         column_str = ", ".join(columns)
         return f" ORDER BY {column_str} {direction}"
 
     @staticmethod
-    def limit(limit, offset=None):
+    def limit(limit: int, offset: Optional[int] = None) -> str:
         if offset is None:
             return f" LIMIT {limit}"
         else:
