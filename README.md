@@ -20,10 +20,10 @@ A declarative ORM from scratch, compatible with SQLite
 
 ## ➤ Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install [your project name].
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install flamel.
 
 ```bash
-pip install ...
+pip install flamel-orm
 ```
 
 ## 📚 Usage

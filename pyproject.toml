@@ -3,10 +3,10 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "flamel"
-version = "0.0.1"
+name = "flamel-orm"
+version = "0.0.3"
 authors = [
-  { name = "test", email = "test@test.com" },
+  { name = "fernando24164", email = "fernando24164@gmail.com" },
 ]
 description = "A simple declarative ORM for SQLite"
 readme = "README.md"
@@ -16,8 +16,10 @@ license = { text = "MIT" }
 classifiers = [
   "Programming Language :: Python :: 3.8",
   "Development Status :: 3 - Alpha",
-  "Topic :: Database :: ORM",
 ]
+
+[project.urls]
+Repository = "https://github.com/fernando24164/flamel"
 
 [tool.setuptools.packages.find]
 exclude = ["logo*", "dist*", "tests*", "examples*"]
