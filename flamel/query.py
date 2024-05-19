@@ -1,3 +1,4 @@
+import re
 from typing import Any, Iterable, List, Optional, Tuple, Union
 
 
@@ -36,6 +37,22 @@ class SQLQueryBuilder:
             return f" LIMIT {limit}"
         else:
             return f" LIMIT {limit} OFFSET {offset}"
+
+
+def validate_sql(query: str) -> bool:
+    patterns = [
+        re.compile(r"SELECT\s+[\w\*,\s]+\s+FROM\s+\w+(\s+WHERE\s+.+)?;", re.IGNORECASE),
+        re.compile(
+            r"INSERT\s+INTO\s+\w+\s*\(?.*\)?\s+VALUES\s*\(?.*\)?;", re.IGNORECASE
+        ),
+        re.compile(r"UPDATE\s+\w+\s+SET\s+[\w=,\s]+(\s+WHERE\s+.+)?;", re.IGNORECASE),
+        re.compile(r"DELETE\s+FROM\s+\w+(\s+WHERE\s+.+)?;", re.IGNORECASE),
+    ]
+
+    if not any(pattern.match(query) for pattern in patterns):
+        raise ValueError("Invalid SQL: Syntax error or unsupported query type.")
+
+    return True
 
 
 class Query:
@@ -78,6 +95,10 @@ class Query:
         return self
 
     def execute(self):
+        try:
+            validate_sql(self.query)
+        except ValueError as e:
+            raise e
         return self.conn.execute(self.query, self.values)
 
     def __repr__(self):

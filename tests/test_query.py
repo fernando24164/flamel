@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from flamel.base import Base
 from flamel.column import Column, Integer, String, ForeignKey
-from flamel.query import Query, SQLQueryBuilder
+from flamel.query import Query, SQLQueryBuilder, validate_sql
 
 
 class TestQuery(TestCase):
@@ -64,7 +64,11 @@ class TestQuery(TestCase):
             age = Column("age", Integer, nullable=False)
 
         Base.set_engine(":memory:")
-        query = SubClass5.query().select("id", "name", "age").order_by("name", "age", direction="DESC")
+        query = (
+            SubClass5.query()
+            .select("id", "name", "age")
+            .order_by("name", "age", direction="DESC")
+        )
         query = str(query)
         assert query == "SELECT id, name, age FROM SubClass5 ORDER BY name, age DESC"
 
@@ -96,7 +100,9 @@ class TestQuery(TestCase):
         Base.set_engine(":memory:")
 
         with self.assertRaises(ValueError):
-            query = SubClass8.query().join("LEFT", "SubClass7", "SubClass8.sub_class7_id = SubClass7.id")
+            query = SubClass8.query().join(
+                "LEFT", "SubClass7", "SubClass8.sub_class7_id = SubClass7.id"
+            )
             query = str(query)
 
     def test_sql_builder_multiple_joins(self):
@@ -106,11 +112,19 @@ class TestQuery(TestCase):
 
         class SubClass10(Base):
             id = Column("id", Integer, primary_key=True, autoincrement=True)
-            sub_class9_id = Column("sub_class9_id", Integer, foreign_key=ForeignKey("sub_class9_id", "SubClass9", "id"))
+            sub_class9_id = Column(
+                "sub_class9_id",
+                Integer,
+                foreign_key=ForeignKey("sub_class9_id", "SubClass9", "id"),
+            )
 
         class SubClass11(Base):
             id = Column("id", Integer, primary_key=True, autoincrement=True)
-            sub_class10_id = Column("sub_class10_id", Integer, foreign_key=ForeignKey("sub_class10_id", "SubClass10", "id"))
+            sub_class10_id = Column(
+                "sub_class10_id",
+                Integer,
+                foreign_key=ForeignKey("sub_class10_id", "SubClass10", "id"),
+            )
 
         Base.set_engine(":memory:")
 
@@ -127,4 +141,34 @@ class TestQuery(TestCase):
             "FROM SubClass11 "
             "LEFT JOIN SubClass10 ON SubClass11.sub_class10_id = SubClass10.id "
             "LEFT JOIN SubClass9 ON SubClass10.sub_class9_id = SubClass9.id"
+        )
+
+
+class TestValidateSQL(TestCase):
+    def test_valid_select_query(self):
+        query = "SELECT name, age FROM users WHERE age > 21;"
+        self.assertTrue(validate_sql(query), "Valid SELECT query should pass.")
+
+    def test_valid_insert_query(self):
+        query = "INSERT INTO users (name, age) VALUES ('Alice', 30);"
+        self.assertTrue(validate_sql(query), "Valid INSERT query should pass.")
+
+    def test_invalid_sql_missing_keyword(self):
+        query = "SELECT name, age users WHERE age > 21;"
+        with self.assertRaises(ValueError) as context:
+            validate_sql(query)
+        self.assertEqual(
+            str(context.exception),
+            "Invalid SQL: Syntax error or unsupported query type.",
+            "Invalid SQL missing keyword should raise ValueError.",
+        )
+
+    def test_invalid_sql_unsupported_structure(self):
+        query = "CREATE TABLE users (id INT, name TEXT);"
+        with self.assertRaises(ValueError) as context:
+            validate_sql(query)
+        self.assertEqual(
+            str(context.exception),
+            "Invalid SQL: Syntax error or unsupported query type.",
+            "Unsupported SQL structure should raise ValueError.",
         )
