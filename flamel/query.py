@@ -95,10 +95,6 @@ class Query:
         return self
 
     def execute(self):
-        try:
-            validate_sql(self.query)
-        except ValueError as e:
-            raise e
         return self.conn.execute(self.query, self.values)
 
     def __repr__(self):

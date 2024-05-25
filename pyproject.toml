@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flamel-orm"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name = "fernando24164", email = "fernando24164@gmail.com" },
 ]

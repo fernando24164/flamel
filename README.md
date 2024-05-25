@@ -43,24 +43,13 @@ Base.set_engine("company.db")
 
 Base.create_tables()
 
-import sqlite3
+worker = Worker(name='John Doe', email='john.doe@example.com')
+worker2 = Worker(name='Jane Smith', email='jane.smith@example.com')
+worker3 = Worker(name='Mike Johnson', email='mike.johnson@example.com')
 
-conn = sqlite3.connect("company.db")
-cursor = conn.cursor()
-
-cursor.execute("INSERT INTO Worker(name, mail) values ('John Doe', 'john.doe@example.com')")
-cursor.execute("INSERT INTO Worker(name, mail) values ('Jane Smith', 'jane.smith@example.com')")
-cursor.execute("INSERT INTO Worker(name, mail) values ('Mike Johnson', 'mike.johnson@example.com')")
-cursor.execute("INSERT INTO Worker(name, mail) values ('Alice Williams', 'alice.williams@example.com')")
-cursor.execute("INSERT INTO Worker(name, mail) values ('Bob Brown', 'bob.brown@example.com')")
-cursor.execute("INSERT INTO Worker(name, mail) values ('Charlie Davis', 'charlie.davis@example.com')")
-cursor.execute("INSERT INTO Worker(name, mail) values ('Eve Miller', 'eve.miller@example.com')")
-cursor.execute("INSERT INTO Worker(name, mail) values ('Frank Clark', 'frank.clark@example.com')")
-cursor.execute("INSERT INTO Worker(name, mail) values ('Grace White', 'grace.white@example.com')")
-cursor.execute("INSERT INTO Worker(name, mail) values ('Henry Harris', 'henry.harris@example.com')")
-
-conn.commit()
-conn.close()
+Base.insert(worker)
+Base.insert(worker2)
+Base.insert(worker3)
 
 query = Worker.query().select().filter(name="John Doe")
 print(query)
@@ -73,7 +62,7 @@ Base.engine_close()
 ## ➤ Roadmap
 
 - [x] MVP of the ORM
-- [ ] Implement a way to insert data
+- [x] Implement a way to insert data
 - [ ] Implement group_by
 - [ ] Implement having
 
