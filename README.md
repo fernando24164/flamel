@@ -1,12 +1,15 @@
+<p align="center">
+   <img src="logo/logo_flamel.jpeg" alt="Flamel Logo" width="200"/>
+</p>
 
-<center>
-<img src="logo/logo_flamel.jpeg" alt="Flamel Logo" width="200"/>
-</center>
+<p align="center">
+    <a src="https://pypi.org/project/flamel-orm">
+        <img alt="python version" src="https://img.shields.io/pypi/pyversions/flamel-orm.svg" />
+    </a>
+    <img alt="CI" src="https://github.com/fernando24164/flamel/actions/workflows/python-test.yml/badge.svg">
+</p>
 
-[![Python version](https://img.shields.io/pypi/pyversions/your-project-name.svg)](https://pypi.org/project/your-project-name/)
-[![License](https://img.shields.io/pypi/l/your-project-name.svg)](https://pypi.org/project/your-project-name/)
-
-### Table of Contents
+# Table of Contents
 
 * [Description](#description)
 * [Installation](#installation)
