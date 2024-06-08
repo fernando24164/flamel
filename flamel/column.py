@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Union
 
 
 class Integer(int):
@@ -59,7 +60,7 @@ class Column:
         name: str,
         data_type: type,
         nullable: bool = True,
-        default=None,
+        default: Union[int, str, datetime, float, bytes, bool, None] = None,
         primary_key: bool = False,
         unique: bool = False,
         check: str = None,
@@ -73,7 +74,7 @@ class Column:
             name (str): The name of the column.
             data_type (type): The data type of the column.
             nullable (bool, optional): A boolean indicating if the column allows null values. Defaults to True.
-            default (Any, optional): The default value for the column. Defaults to None.
+            default (Union[int, str, datetime, float, bytes, bool, None], optional): The default value for the column. Defaults to None.
             primary_key (bool, optional): A boolean indicating if the column is a primary key. Defaults to False.
             unique (bool, optional): A boolean indicating if the column values must be unique. Defaults to False.
             check (str, optional): A string representing a check constraint for the column. Defaults to None.
@@ -90,7 +91,9 @@ class Column:
         if not isinstance(data_type, type) or not issubclass(
             data_type, (Integer, String, DateTime, Real, Blob, Boolean)
         ):
-            raise TypeError("data_type must be a type")
+            raise TypeError(
+                "data_type must be a type, one of Integer, String, DateTime, Real, Blob, Boolean"
+            )
         self.data_type = data_type
         self.nullable = nullable
         if default is not None:
