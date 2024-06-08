@@ -12,9 +12,12 @@ class Base:
             Base.__registry__[cls.__name__] = cls
 
     def __init__(self, **kwargs):
-        for name, attr in self.__class__.__dict__.items():
+        for name, attr in vars(self.__class__).items():
             if isinstance(attr, Column):
-                setattr(self, name, kwargs.get(name, attr.default))
+                value = kwargs.get(name, attr.default)
+                if value is None and not attr.nullable:
+                    value = attr.default
+                setattr(self, name, value)
 
     @classmethod
     def get_all_models(cls):
@@ -27,12 +30,11 @@ class Base:
     @classmethod
     def create_tables(cls):
         if not hasattr(cls, "engine") or cls.engine is None:
-            raise AttributeError(
-                "Database engine is not set. Please set the engine before creating tables."
-            )
+            raise AttributeError("Database engine is not set. Please set the engine before creating tables.")
 
         for model in cls.get_all_models().values():
             columns = []
+            foreign_keys = []
 
             for name, attr in model.__dict__.items():
                 if isinstance(attr, Column):
@@ -58,16 +60,14 @@ class Base:
 
                     columns.append(column_def)
 
-            for name, attr in model.__dict__.items():
-                if isinstance(attr, Column) and attr.foreign_key is not None:
-                    foreign_key_def = f"FOREIGN KEY ({attr.foreign_key.column_name}) REFERENCES {attr.foreign_key.referenced_table}({attr.foreign_key.referenced_column})"
-                    columns.append(foreign_key_def)
+                    if attr.foreign_key is not None:
+                        foreign_key_def = f"FOREIGN KEY ({attr.name}) REFERENCES {attr.foreign_key.referenced_table}({attr.foreign_key.referenced_column})"
+                        foreign_keys.append(foreign_key_def)
 
             table_name = model.__name__
+            columns.extend(foreign_keys)
             columns_str = ", ".join(columns)
-            cls.engine.execute(
-                f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_str});"
-            )
+            cls.engine.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_str});")
 
     @classmethod
     def insert(cls, instance):
@@ -112,9 +112,11 @@ class Base:
         if primary_key_autoincrement:
             sql_check = f"SELECT COUNT(*) FROM {table_name} WHERE {columns[1]} = ?"
             result = cls.engine.execute(sql_check, [values[1]])[0][0]
-        else:
+        elif primary_key_column:
             sql_check = f"SELECT COUNT(*) FROM {table_name} WHERE {primary_key_column} = ?"
             result = cls.engine.execute(sql_check, [primary_key_value])[0][0]
+        else:
+            result = 0
 
         if result > 0:
             set_clause = ", ".join([f"{col} = ?" for col in columns])
