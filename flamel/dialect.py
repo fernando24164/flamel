@@ -16,7 +16,7 @@ class SQLiteDBAPI:
             return self.cursor.fetchall()
         except sqlite3.Error as e:
             self.rollback()
-            raise sqlite3.OperationalError(e)
+            raise sqlite3.OperationalError(e) from e
 
     def executemany(self, sql, parameters):
         try:
@@ -24,7 +24,7 @@ class SQLiteDBAPI:
             self.commit()
         except sqlite3.Error as e:
             self.rollback()
-            raise sqlite3.OperationalError(e)
+            raise sqlite3.OperationalError(e) from e
 
     def executescript(self, sql):
         try:
@@ -32,7 +32,7 @@ class SQLiteDBAPI:
             self.commit()
         except sqlite3.Error as e:
             self.rollback()
-            raise sqlite3.OperationalError(e)
+            raise sqlite3.OperationalError(e) from e
 
     def commit(self):
         self.conn.commit()
