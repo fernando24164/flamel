@@ -1,10 +1,12 @@
+from typing import Any, Dict
+
 from flamel.column import Column
-from flamel.query import Query
 from flamel.dialect import SQLiteDBAPI
+from flamel.query import Query
 
 
 class Base:
-    __registry__ = {}
+    __registry__: Dict[str, Any] = {}
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -20,17 +22,19 @@ class Base:
                 setattr(self, name, value)
 
     @classmethod
-    def get_all_models(cls):
+    def get_all_models(cls) -> Dict[str, Any]:
         return {name: cls for name, cls in cls.__registry__.items()}
 
     @classmethod
-    def get_model(cls, name):
+    def get_model(cls, name: str) -> Any:
         return cls.__registry__.get(name)
 
     @classmethod
-    def create_tables(cls):
+    def create_tables(cls) -> None:
         if not hasattr(cls, "engine") or cls.engine is None:
-            raise AttributeError("Database engine is not set. Please set the engine before creating tables.")
+            raise AttributeError(
+                "Database engine is not set. Please set the engine before creating tables."
+            )
 
         for model in cls.get_all_models().values():
             columns = []
@@ -67,10 +71,12 @@ class Base:
             table_name = model.__name__
             columns.extend(foreign_keys)
             columns_str = ", ".join(columns)
-            cls.engine.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_str});")
+            cls.engine.execute(
+                f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_str});"
+            )
 
     @classmethod
-    def insert(cls, instance):
+    def insert(cls, instance: Any) -> None:
         if not hasattr(cls, "engine") or cls.engine is None:
             raise AttributeError(
                 "Database engine is not set. Please set the engine before inserting data."
@@ -113,7 +119,9 @@ class Base:
             sql_check = f"SELECT COUNT(*) FROM {table_name} WHERE {columns[1]} = ?"
             result = cls.engine.execute(sql_check, [values[1]])[0][0]
         elif primary_key_column:
-            sql_check = f"SELECT COUNT(*) FROM {table_name} WHERE {primary_key_column} = ?"
+            sql_check = (
+                f"SELECT COUNT(*) FROM {table_name} WHERE {primary_key_column} = ?"
+            )
             result = cls.engine.execute(sql_check, [primary_key_value])[0][0]
         else:
             result = 0
@@ -131,13 +139,13 @@ class Base:
             cls.engine.execute(sql_insert, values)
 
     @classmethod
-    def set_engine(cls, engine: str):
+    def set_engine(cls, engine: str) -> None:
         cls.engine = SQLiteDBAPI(engine)
 
     @classmethod
-    def engine_close(cls):
+    def engine_close(cls) -> None:
         cls.engine.close()
 
     @classmethod
-    def query(cls):
+    def query(cls) -> Query:
         return Query(cls, cls.engine)

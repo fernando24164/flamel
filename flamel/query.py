@@ -47,6 +47,7 @@ def validate_sql(query: str) -> bool:
         ),
         re.compile(r"UPDATE\s+\w+\s+SET\s+[\w=,\s]+(\s+WHERE\s+.+)?;", re.IGNORECASE),
         re.compile(r"DELETE\s+FROM\s+\w+(\s+WHERE\s+.+)?;", re.IGNORECASE),
+        re.compile(r"CREATE\s+TABLE\s+\w+\s*\(?.*\)?;", re.IGNORECASE),
     ]
 
     if not any(pattern.match(query) for pattern in patterns):
@@ -56,18 +57,18 @@ def validate_sql(query: str) -> bool:
 
 
 class Query:
-    def __init__(self, model, conn):
+    def __init__(self, model: Any, conn: Any) -> None:
         self.model = model
         self.conn = conn
         self.query_builder = SQLQueryBuilder()
         self.query = None
-        self.values = []
+        self.values: List[Any] = []
 
-    def select(self, *columns):
+    def select(self, *columns: Any) -> "Query":
         self.query = self.query_builder.select(self.model, list(columns))
         return self
 
-    def filter(self, **filters):
+    def filter(self, **filters: Any) -> "Query":
         if self.query is None:
             raise ValueError("The 'select' method must be called before 'filter'.")
         filter_clause, filter_values = self.query_builder.filter(**filters)
@@ -76,28 +77,28 @@ class Query:
         self.values.extend(filter_values)
         return self
 
-    def join(self, join_type, table_name, on_condition):
+    def join(self, join_type: str, table_name: str, on_condition: str) -> "Query":
         if self.query is None:
             raise ValueError("The 'select' method must be called before 'join'.")
         self.query += self.query_builder.join(join_type, table_name, on_condition)
         return self
 
-    def order_by(self, *columns, direction="ASC"):
+    def order_by(self, *columns: Any, direction: str = "ASC") -> "Query":
         if self.query is None:
             raise ValueError("The 'select' method must be called before 'order_by'.")
         self.query += self.query_builder.order_by(*columns, direction=direction)
         return self
 
-    def limit(self, limit, offset=None):
+    def limit(self, limit: int, offset: int = None) -> "Query":
         if self.query is None:
             raise ValueError("The 'select' method must be called before 'limit'.")
         self.query += self.query_builder.limit(limit, offset)
         return self
 
-    def execute(self):
+    def execute(self) -> Any:
         return self.conn.execute(self.query, self.values)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         query_str = f"{self.query}" if getattr(self, "query", None) else ""
         values_str = f", {self.values}" if getattr(self, "values", None) else ""
         return f"{query_str}{values_str}"

@@ -163,12 +163,6 @@ class TestValidateSQL(TestCase):
             "Invalid SQL missing keyword should raise ValueError.",
         )
 
-    def test_invalid_sql_unsupported_structure(self):
-        query = "CREATE TABLE users (id INT, name TEXT);"
-        with self.assertRaises(ValueError) as context:
-            validate_sql(query)
-        self.assertEqual(
-            str(context.exception),
-            "Invalid SQL: Syntax error or unsupported query type.",
-            "Unsupported SQL structure should raise ValueError.",
-        )
+    def test_valid_create_table_query(self):
+        query = "CREATE TABLE users (id INT, name VARCHAR(255));"
+        self.assertTrue(validate_sql(query), "Valid CREATE TABLE query should pass.")
