@@ -38,6 +38,11 @@ class SQLQueryBuilder:
         else:
             return f" LIMIT {limit} OFFSET {offset}"
 
+    @staticmethod
+    def group_by(*columns: Iterable[str]) -> str:
+        column_str = ", ".join(columns)
+        return f" GROUP BY {column_str}"
+
 
 def validate_sql(query: str) -> bool:
     patterns = [
@@ -93,6 +98,12 @@ class Query:
         if self.query is None:
             raise ValueError("The 'select' method must be called before 'limit'.")
         self.query += self.query_builder.limit(limit, offset)
+        return self
+
+    def group_by(self, *columns: Any) -> "Query":
+        if self.query is None:
+            raise ValueError("The 'select' method must be called before 'group_by'.")
+        self.query += self.query_builder.group_by(*columns)
         return self
 
     def execute(self) -> Any:

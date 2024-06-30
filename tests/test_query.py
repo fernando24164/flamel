@@ -166,3 +166,38 @@ class TestValidateSQL(TestCase):
     def test_valid_create_table_query(self):
         query = "CREATE TABLE users (id INT, name VARCHAR(255));"
         self.assertTrue(validate_sql(query), "Valid CREATE TABLE query should pass.")
+
+
+class MyModel:
+    __name__ = "MyModel"
+
+
+class TestQueryGroupBy(TestCase):
+    def setUp(self):
+        self.conn = MagicMock()
+        self.query = Query(MyModel, self.conn)
+
+    def test_group_by_single_column(self):
+        self.query.select("column1", "column2").group_by("column1").execute()
+        expected_query = "SELECT column1, column2 FROM MyModel GROUP BY column1"
+        self.conn.execute.assert_called_with(expected_query, [])
+
+    def test_group_by_multiple_columns(self):
+        self.query.select("column1", "column2").group_by("column1", "column2").execute()
+        expected_query = (
+            "SELECT column1, column2 FROM MyModel GROUP BY column1, column2"
+        )
+        self.conn.execute.assert_called_with(expected_query, [])
+
+    def test_group_by_without_select(self):
+        with self.assertRaises(ValueError) as context:
+            self.query.group_by("column1")
+        self.assertEqual(
+            str(context.exception),
+            "The 'select' method must be called before 'group_by'.",
+        )
+
+    def test_group_by_no_columns(self):
+        self.query.select("column1", "column2").group_by().execute()
+        expected_query = "SELECT column1, column2 FROM MyModel GROUP BY "
+        self.conn.execute.assert_called_with(expected_query, [])
