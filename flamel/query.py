@@ -69,8 +69,19 @@ class Query:
         self.query = None
         self.values: List[Any] = []
 
+
+    def with_cte(self, cte_name: str, cte_query: str) -> "Query":
+        if self.query is None:
+            self.query = f"WITH {cte_name} AS ({cte_query}) "
+        else:
+            self.query = f"WITH {cte_name} AS ({cte_query}), {self.query}"
+        return self
+
     def select(self, *columns: Any) -> "Query":
-        self.query = self.query_builder.select(self.model, list(columns))
+        if self.query is None:
+            self.query = self.query_builder.select(self.model, list(columns))
+        else:
+            self.query = f"{self.query}{self.query_builder.select(self.model, list(columns))}"
         return self
 
     def filter(self, **filters: Any) -> "Query":

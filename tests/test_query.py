@@ -201,3 +201,44 @@ class TestQueryGroupBy(TestCase):
         self.query.select("column1", "column2").group_by().execute()
         expected_query = "SELECT column1, column2 FROM MyModel GROUP BY "
         self.conn.execute.assert_called_with(expected_query, [])
+
+
+class TestQueryWithCTE(TestCase):
+    def setUp(self):
+        self.conn = MagicMock()
+        mocked_model = MagicMock()
+        mocked_model.__name__ = "cte_example"
+        self.query = Query(model=mocked_model, conn=self.conn)
+
+    def test_cte_creation(self):
+        cte_name = "cte_example"
+        cte_query = "SELECT * FROM example_table"
+
+        self.query.with_cte(cte_name, cte_query)
+
+        expected_query = f"WITH {cte_name} AS ({cte_query}) "
+        self.assertEqual(str(self.query), expected_query)
+
+    def test_multiple_ctes(self):
+        cte1_name = "cte_example1"
+        cte1_query = "SELECT * FROM example_table1"
+        cte2_name = "cte_example2"
+        cte2_query = "SELECT * FROM example_table2"
+
+        self.query.with_cte(cte1_name, cte1_query)
+        self.query.with_cte(cte2_name, cte2_query)
+
+        expected_query = (
+            f"WITH {cte2_name} AS ({cte2_query}), WITH {cte1_name} AS ({cte1_query}) "
+        )
+        self.assertEqual(str(self.query), expected_query)
+
+    def test_cte_integration(self):
+        cte_name = "cte_example"
+        cte_query = "SELECT * FROM example_table"
+
+        self.query.with_cte(cte_name, cte_query)
+        self.query.select("column1", "column2")
+
+        expected_query = f"WITH {cte_name} AS ({cte_query}) SELECT column1, column2 FROM cte_example"
+        self.assertEqual(str(self.query), expected_query)
