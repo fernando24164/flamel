@@ -43,6 +43,10 @@ class SQLQueryBuilder:
         column_str = ", ".join(columns)
         return f" GROUP BY {column_str}"
 
+    @staticmethod
+    def having(condition: str) -> str:
+        return f" HAVING {condition}"
+
 
 def validate_sql(query: str) -> bool:
     patterns = [
@@ -69,7 +73,6 @@ class Query:
         self.query = None
         self.values: List[Any] = []
 
-
     def with_cte(self, cte_name: str, cte_query: str) -> "Query":
         if self.query is None:
             self.query = f"WITH {cte_name} AS ({cte_query}) "
@@ -81,7 +84,9 @@ class Query:
         if self.query is None:
             self.query = self.query_builder.select(self.model, list(columns))
         else:
-            self.query = f"{self.query}{self.query_builder.select(self.model, list(columns))}"
+            self.query = (
+                f"{self.query}{self.query_builder.select(self.model, list(columns))}"
+            )
         return self
 
     def filter(self, **filters: Any) -> "Query":
@@ -115,6 +120,12 @@ class Query:
         if self.query is None:
             raise ValueError("The 'select' method must be called before 'group_by'.")
         self.query += self.query_builder.group_by(*columns)
+        return self
+
+    def having(self, condition: str) -> "Query":
+        if self.query is not None and "GROUP BY" not in self.query:
+            raise ValueError("The 'group_by' method must be called before 'having'.")
+        self.query += self.query_builder.having(condition)
         return self
 
     def execute(self) -> Any:

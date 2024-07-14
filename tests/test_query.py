@@ -240,5 +240,38 @@ class TestQueryWithCTE(TestCase):
         self.query.with_cte(cte_name, cte_query)
         self.query.select("column1", "column2")
 
-        expected_query = f"WITH {cte_name} AS ({cte_query}) SELECT column1, column2 FROM cte_example"
+        expected_query = (
+            f"WITH {cte_name} AS ({cte_query}) SELECT column1, column2 FROM cte_example"
+        )
+        self.assertEqual(str(self.query), expected_query)
+
+
+class TestQueryHaving(TestCase):
+    def setUp(self):
+        self.mock_conn = MagicMock()
+        self.mock_model = MagicMock()
+        self.mock_model.__name__ = "table_example"
+        self.query = Query(self.mock_model, self.mock_conn)
+
+    def test_having_with_group_by(self):
+        self.query.select("column1", "column2").group_by("column1").having(
+            "COUNT(column2) > 1"
+        )
+        expected_query = "SELECT column1, column2 FROM table_example GROUP BY column1 HAVING COUNT(column2) > 1"
+        self.assertEqual(str(self.query), expected_query)
+
+    def test_having_with_multiple_methods(self):
+        # Test chaining multiple methods including having
+        self.query.select("column1", "column2").group_by("column1").having(
+            "COUNT(column2) > 1"
+        ).order_by("column1")
+        expected_query = "SELECT column1, column2 FROM table_example GROUP BY column1 HAVING COUNT(column2) > 1 ORDER BY column1 ASC"
+        self.assertEqual(str(self.query), expected_query)
+
+    def test_having_with_complex_condition(self):
+        # Test adding a HAVING clause with a complex condition
+        self.query.select("column1", "column2").group_by("column1").having(
+            "SUM(column2) > 100 AND AVG(column2) < 50"
+        )
+        expected_query = "SELECT column1, column2 FROM table_example GROUP BY column1 HAVING SUM(column2) > 100 AND AVG(column2) < 50"
         self.assertEqual(str(self.query), expected_query)

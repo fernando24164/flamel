@@ -67,7 +67,7 @@ Base.engine_close()
 - [x] MVP of the ORM
 - [x] Implement a way to insert data
 - [x] Implement group_by
-- [ ] Implement having
+- [x] Implement having
 
 ## ➤ Credits
 
